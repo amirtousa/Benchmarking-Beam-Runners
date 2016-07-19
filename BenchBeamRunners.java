@@ -89,7 +89,7 @@ public class BenchBeamRunners {
 									}
 
 									try{
-					                  mt = UtilitySL.createMT(line.split(","));
+					                  mt = BeamAppSupport.createMT(line.split(","));
 									}catch(NullPointerException exp){
 										//do nothing;
 									System.out.println("ZZZZ: Did nothing in UtilitySL.createMT");
@@ -168,18 +168,18 @@ public class BenchBeamRunners {
 					        long startTime = System.currentTimeMillis();
 					        int min = (Integer.parseInt(mt.get("time")) / 60) + 1;
 					        String stoppedKey = String.format("%s-%s-%s-%s-%s", mt.get("xWay"), mt.get("dir"), mt.get("lane"), mt.get("seg"), mt.get("pos"));
-					        String segKey = UtilitySL.MYgetOrCreateSeg(mt, connection);  // Simply create a new seg-min combination if it doesn't exist
-					        val = UtilitySL.MYcreateCarIfNotExists(mt, connection); 
+					        String segKey = BeamAppSupport.MYgetOrCreateSeg(mt, connection);  // Simply create a new seg-min combination if it doesn't exist
+					        val = BeamAppSupport.MYcreateCarIfNotExists(mt, connection); 
 					        if (val != null) tokens = val.split(",");
 					        else return; // System.exit is a bit too harsh
-					        if (UtilitySL.isAnomalousCar(mt, tokens)){
+					        if (BeamAppSupport.isAnomalousCar(mt, tokens)){
 					        	return;
 					        }
 					        // SAME POSITION?
 					        if (tokens[7].equals(mt.get("pos")) && tokens[4].equals(mt.get("lane"))) {
 					        	if (tokens[8].equals("3")) {  // Already seen three times at this pos+lane, so create a STOPPED car
-					        		if (UtilitySL.MYcreateStoppedCar(stoppedKey, mt.get("carId"), connection)) {
-					        			UtilitySL.MYcreateAccident(stoppedKey, String.format("%s-%s-%s", mt.get("xWay"), mt.get("dir"), mt.get("seg")), mt.get("time"), connection);
+					        		if (BeamAppSupport.MYcreateStoppedCar(stoppedKey, mt.get("carId"), connection)) {
+					        			BeamAppSupport.MYcreateAccident(stoppedKey, String.format("%s-%s-%s", mt.get("xWay"), mt.get("dir"), mt.get("seg")), mt.get("time"), connection);
 							               
 					                }
 					            }
@@ -187,9 +187,9 @@ public class BenchBeamRunners {
 					            // NEW POSITION
 					        } else { // Will I never get to this else!!??
 					        	String prevStoppedKey = String.format("%s-%s-%s-%s-%s", tokens[3], tokens[5], tokens[4], tokens[6], tokens[7]);
-					        	UtilitySL.MYremoveStoppedIfAny(prevStoppedKey, mt, connection);    
+					        	BeamAppSupport.MYremoveStoppedIfAny(prevStoppedKey, mt, connection);    
 					            String prevAccidentKey = String.format("%s-%s-%s", tokens[3], tokens[5], tokens[6]);
-					            UtilitySL.MYclearAccidentIfAny(prevAccidentKey, mt, connection);
+					            BeamAppSupport.MYclearAccidentIfAny(prevAccidentKey, mt, connection);
 					            tokens[8] = "1"; // Reset current car's number of times at this position
 
 					            // NEW POSITION BUT SAME SEGMENT
@@ -204,12 +204,12 @@ public class BenchBeamRunners {
 					                int lav = 0;
 					                if (!mt.get("lane").equals("4")) {
 					                	String lastMinKey = String.format("%s-%s-%s-%d", mt.get("xWay"), mt.get("dir"), mt.get("seg"), (min - 1));
-					                	numv = UtilitySL.MYgetNumV(lastMinKey, connection);
-					                    if (numv > 50) currToll = UtilitySL.calcToll(numv, connection);
-					                    lav = UtilitySL.MYgetLav(mt, min, connection);
+					                	numv = BeamAppSupport.MYgetNumV(lastMinKey, connection);
+					                    if (numv > 50) currToll = BeamAppSupport.calcToll(numv, connection);
+					                    lav = BeamAppSupport.MYgetLav(mt, min, connection);
 					                    if (lav >= 40) currToll = 0;
 					                    // ACCIDENTS
-					                    int accSeg = UtilitySL.MYinAccidentZone(mt, min, connection);
+					                    int accSeg = BeamAppSupport.MYinAccidentZone(mt, min, connection);
 					                    String strOutput = "INIT_OUT";					                    					               					                    
 					                    if (accSeg >= 0) {
 					                        currToll = 0;
@@ -280,7 +280,7 @@ public class BenchBeamRunners {
 		}catch(Exception exp){
 			exp.printStackTrace();
 		}
-		System.out.printf("\n.....................Completed method");
+		System.out.printf("\n...Completed method");
 		try{
 			System.out.printf("\n...about to run pipeline");
 		   p.run();
