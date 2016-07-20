@@ -69,11 +69,15 @@ Please see pom.xml provided in this package as a guideline to produce the final 
 
 A fat jar is necessary if you want to submit your Beam code to a (Flink) cluster. The fat jar includes the Beam app code but also Beam APIs code which is necessary during runtime. Note that this step is necessary because the target Beam Runner is not part of the target cluster i.e. Flink in this case.
 
-1. If there is already a &quot;target&quot; in the project root folder where pom.xml resides, remove it
-rm –r target
-2. Build clean the fat jar
-mvn clean package -Pbuild-jar
-3. A folder &quot;target&quot; is created a fat jar named benchmark-runners-1.0.jar is created.
+1. If there is already a &quot;target&quot; folder under the project root folder where pom.xml resides, remove it:
+
+  **rm –r target**
+
+1. Build clean the fat jar:
+
+  **mvn clean package -Pbuild-jar**
+
+1. A new &quot;target&quot; folder is created. The new Beam fat jar named benchmark-runners-1.0.jar is now under this &quot;target&quot; folder &amp; it&#39;s ready for deployment to the (Flink) Cluster.
 
 Please submit the Beam fat jar in the target folder to the (Flink) cluster using the command-line utility like so:
 
