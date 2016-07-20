@@ -43,7 +43,7 @@ This section will be completed when there is adequate R&amp;D information availa
 Please browse through our new Apache [Beam community website](http://maven.nanthrax.net/beam/)
 
 [Install &amp; Configure Flink Cluster](https://ci.apache.org/projects/flink/flink-docs-release-0.8/cluster_setup.html)
-The above link provides guidelines to install latest Hadoop, configure the Linux servers for SSH amongst the clustered servers and install other necessary artifacts to construct a Flink Cluster.
+This link provides guidelines to install latest Hadoop, configure the Linux servers for SSH amongst the clustered servers and install other necessary artifacts to construct a Flink Cluster.
 
 [Install, Configure &amp; Integrate Kafka with Flink Cluster](http://data-artisans.com/kafka-flink-a-practical-how-to)
 
