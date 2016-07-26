@@ -38,8 +38,8 @@ public class BeamAppSupport {
 	 * @return
 	 */
 	public static String LRGetOrCreateSeg(Map<String, String> mt, RedisConnection<String, String> connection) {
-		long ltime = Long.parseLong(mt.get("time"));
-		String segKey = String.format("%s-%s-%s-%s", mt.get("xWay"), mt.get("dir"), mt.get("seg"), (ltime / 60 + 1)); 
+		int ltime = Integer.parseInt(mt.get("time"));
+		String segKey = String.format("%s-%s-%s-%s", mt.get("xWay"), mt.get("dir"), mt.get("seg"), (ltime / 180 + 1)); 
 		// Create a new record for a particular seg+min key for this xway+dir if
 		// it doesn't exist
 		if (((Boolean) (connection.hexists("segSumSpeeds", segKey))).booleanValue() == false
@@ -47,9 +47,8 @@ public class BeamAppSupport {
 				&& ((Boolean) (connection.hexists("segCarIdSet", segKey))).booleanValue() == false) {
 			connection.hset("segSumSpeeds", segKey, "0");
 			connection.hset("segSumNumReadings", segKey, "0");
-			connection.sadd(segKey, mt.get("carId"));
-			connection.hset("segCarIdSet", segKey, ""); /// this will overwrite
-														/// it!!!?? chech Redis docs on "hset". Maybe.
+			connection.sadd(segKey+"-set", mt.get("carId"));
+			connection.hset("segCarIdSet", segKey, segKey+"-set"); /// this will overwrite														/// it!!!?? check Redis docs on "hset". Maybe.
 		}
 		return segKey;
 	}
@@ -66,16 +65,16 @@ public class BeamAppSupport {
 					"-1", "-1", "0", "0");
 			connection.hset("currentcars", mt.get("carId"), carLine);
 		} else {
-			String val = connection.hget("currentcars", mt.get("carId"));
-			carLine = val;
-			String[] tokens = val.split(",");
-			//Check if its a re-ent car, if so, reset it
-			if (mt.get("lane").equals("0") && (Long.parseLong(mt.get("time")) > Long.parseLong(tokens[1]) + 60)) { 
-				carLine = String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s", mt.get("carId"), "-1", "-1", "-1", "-1", "-1",
-						"-1", "-1", "0", "0");
-				// connection.set(mt.get("carId"), carLine);
-				//Get current car's info from Redis
-				connection.hset("currentcars", mt.get("carId"), carLine);
+			carLine = connection.hget("currentcars", mt.get("carId"));
+			if (null != carLine){
+				String[] tokens = carLine.split(",");
+				//Check if its a re-ent car, if so, reset it
+				if (mt.get("lane").equals("0") && (Integer.parseInt(mt.get("time")) > (Integer.parseInt(tokens[1]) + 180))) { 
+					carLine = String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s", mt.get("carId"), "-1", "-1", "-1", "-1", "-1",
+							"-1", "-1", "0", "0");
+					//Update current car's info in Redis
+					connection.hset("currentcars", mt.get("carId"), carLine);
+				}
 			}
 		}
 		return carLine;
@@ -94,7 +93,7 @@ public class BeamAppSupport {
 			String stoppedLine = String.format("%s,%s", carId, "-1");
 			connection.hset("stoppedcars", stoppedKey, stoppedLine);
 			return true;
-		} else {
+		} else {// exists
 			val = connection.hget("stoppedcars", stoppedKey);
 			String[] tokens = val.split(",");
 			if (carId.equals(tokens[0]))
@@ -198,8 +197,8 @@ public class BeamAppSupport {
 			if (((Boolean) (connection.hexists("accidentcars", k))).booleanValue() == true) {
 				val = connection.hget("accidentcars", k);
 				String[] tokens = val.split(",");
-				int accNotiThresholdMin = Integer.parseInt(tokens[0]) / 60 + 2;
-				int accClearMin = Integer.parseInt(tokens[1]) / 60 + 1;
+				int accNotiThresholdMin = Integer.parseInt(tokens[0]) / 180 + 2;
+				int accClearMin = Integer.parseInt(tokens[1]) / 180 + 1;
 				if (!tokens[1].equals("-1") && accNotiThresholdMin > accClearMin)
 					continue;
 				if ((min >= accNotiThresholdMin && tokens[1].equals("-1"))
@@ -232,9 +231,9 @@ public class BeamAppSupport {
 	 * @return
 	 */
 	public static boolean isAnomalousCar(Map<String, String> mt, String[] tokens) {
-		if (tokens[4].equals("4") && !mt.get("lane").equals("0")) {
+		if (tokens[4].equals("4") && !(mt.get("lane").equals("0"))) {
 			return true;
-		};
+		}
 		return false;
 	}
 
@@ -269,4 +268,28 @@ public class BeamAppSupport {
 		}
 		return false;
 	}
+	
+	
+	/**
+	 * @param prevAccidentKey
+	 * @param mt
+	 * @param connection
+	 * @return
+	 */	
+	public static boolean LRClearAccidentIfAny(String prevAccidentKey, Map<String, String> mt, RedisConnection<String, String> connection) {
+        String val = null; 
+        if (((Boolean)(connection.hexists("accidentcars", prevAccidentKey))).booleanValue() ==  true){
+        	val = connection.hget("accidentcars", prevAccidentKey);
+            String[] tokens = val.split(",");
+            if (tokens[1].equals("-1")) {
+                if (mt.get("carId").equals(tokens[2]) || mt.get("carId").equals(tokens[3])) {
+                    String accLine = String.format("%s,%s,%s,%s", tokens[0], mt.get("time"), tokens[2], tokens[3]);
+                    connection.hset("accidentcars",prevAccidentKey, accLine);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
 }
