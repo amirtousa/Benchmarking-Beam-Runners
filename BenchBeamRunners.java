@@ -1,5 +1,16 @@
 package benchmark.flinkspark.flink;
 
+/**
+ * Acknowledgement
+ 	I gratefully acknowledge the support and generosity of my colleague Sung Kim in success of this work.
+ 	Sung provided me with the previously implemented core Linear Road logic for a different technology.
+ 	He also provided me every kind of support to identify the core logic for LR computations.
+ 	Subsequently, I borrowed the methods t0, t2 , t3 & their sub methods roughly as is.
+ 	Without such great help from Sung, implementing the LR problem core logic would have been a roadblock.
+ * Amir  Bahmanyari
+ *
+ */
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -34,10 +45,6 @@ import org.apache.beam.sdk.values.PCollection;
  *
  */
 
-/**
- * @author Amir  Bahmanyari
- *
- */
 public class BenchBeamRunners {
 
 	/**
@@ -54,10 +61,10 @@ public class BenchBeamRunners {
 		options.setStreaming(true);
 		//Create the DAG pipeline for parallel processing of independent LR records
 		Pipeline p = Pipeline.create(options);
-		//Kafka broker topic is identified as "lroad" 
+		//Kafka broker topic is identified as "lroad"
 		List<String> topics = Arrays.asList("lroad");
 		int type3Processe = 0;
-		
+
 		// Invoke Beam KafkaIO to read Linear Road records from Kafka broker typed as "lroad".
 		// Kafka is running in kirk at port 9092 by default.
 		try {
@@ -80,7 +87,7 @@ public class BenchBeamRunners {
 								boolean bolEndOfFile = false;
 								// PrintWriter _writer = null;
 								PrintWriter _writerT3 = null;
-								
+
 								// This method is invoked upon receiving a record from Kafka broker.
 								// ctx embeds the data string as per one record
 								@Override
@@ -185,10 +192,10 @@ public class BenchBeamRunners {
 									connection.set("type0Seen", "0");
 									connection.set("type2Seen", "0");
 									connection.set("type3Seen", "0");
-									
+
 								}// of connRedis
 
-								
+
 								/**
 								 * @param mt
 								 * t0 is the type used to calculate tolls & emit notifications
@@ -197,17 +204,17 @@ public class BenchBeamRunners {
 									String val = null;
 									String[] tokens = null;
 									long startTime = System.currentTimeMillis();
-									int min = Integer.parseInt(mt.get("time")) / 60 + 1;						
+									int min = Integer.parseInt(mt.get("time")) / 60 + 1;
 									String stoppedKey = String.format("%s-%s-%s-%s-%s", mt.get("xWay"), mt.get("dir"),
 											mt.get("lane"), mt.get("seg"), mt.get("pos"));
 									//Create a new Seg-Min combo. Make sure it doesnt already exist.
-									String segKey = BeamAppSupport.LRGetOrCreateSeg(mt, connection); 																										
-																										
+									String segKey = BeamAppSupport.LRGetOrCreateSeg(mt, connection);
+
 									val = BeamAppSupport.LRCreateCarIfNotExists(mt, connection);
 									if (val != null)
 										tokens = val.split(",");
 									else
-										return; 
+										return;
 									if (BeamAppSupport.isAnomalousCar(mt, tokens) == true) {
 										return;
 									}
@@ -224,7 +231,7 @@ public class BenchBeamRunners {
 									// SAME POSITION?
 									if (tokens[7].equals(mt.get("pos")) && tokens[4].equals(mt.get("lane"))) { //42000
 									//if (tokens[3].equals(mt.get("xWay")) && tokens[5].equals(mt.get("dir")) && tokens[7].equals(mt.get("pos")) && tokens[4].equals(mt.get("lane"))) {
-										if (tokens[8].equals("3")) { // Already seen 3 times, create a Stopped car																		
+										if (tokens[8].equals("3")) { // Already seen 3 times, create a Stopped car
 											if (BeamAppSupport.LRCreateStoppedCar(stoppedKey, mt.get("carId"),
 													connection)) {
 												BeamAppSupport.LRCreateAccident(
@@ -235,7 +242,7 @@ public class BenchBeamRunners {
 										}
 										tokens[8] = Integer.toString(Integer.parseInt(tokens[8]) + 1);
 										// NEW POSITION
-									} else { 
+									} else {
 										String prevStoppedKey = String.format("%s-%s-%s-%s-%s", tokens[3], tokens[5],
 												tokens[4], tokens[6], tokens[7]);
 										BeamAppSupport.LRRemoveStoppedIfAny(prevStoppedKey, mt, connection);
@@ -296,7 +303,7 @@ public class BenchBeamRunners {
 									// added due to difference with Validator
 									int removeMin = min - 6;
 									String segRemovedKey = String.format("%s-%s-%s-%s", mt.get("xWay"), mt.get("dir"),
-											mt.get("seg"), removeMin); 
+											mt.get("seg"), removeMin);
 									if (null != connection.hget("segSumSpeeds", segRemovedKey))
 										connection.del("segSumSpeeds", segRemovedKey);
 									if (null != connection.hget("segSumNumReadings", segRemovedKey))
@@ -313,7 +320,7 @@ public class BenchBeamRunners {
 												Integer.parseInt(connection.hget("segSumNumReadings", segKey)) + 1));
 
 									if (((Boolean) (connection.hexists("segCarIdSet", segKey)))
-											.booleanValue() == true) { 
+											.booleanValue() == true) {
 										connection.smembers(segKey).add(mt.get("carId"));
 									}
 								}
@@ -344,12 +351,12 @@ public class BenchBeamRunners {
 										return; // skip this strange record
 									}
 								}
-								
+
 								/**
 								 * @param mt
 								 * Type t2 LR record. Will test later.
 								 */
-								public void t2(Map<String, String> mt) { 
+								public void t2(Map<String, String> mt) {
 									connection.incr("type2Processed");
 								}
 
