@@ -1,5 +1,16 @@
 package benchmark.flinkspark.flink;
 
+/**
+ * Acknowledgement
+ 	I gratefully acknowledge the support and generosity of my colleague Sung Kim in success of this work.
+ 	Sung provided me with the previously implemented core Linear Road logic for a different technology.
+ 	He also provided me every kind of support to identify the core logic for LR computations.
+ 	Subsequently, I borrowed most of the upport methods in this file roughly as is.
+ 	Without such great help from Sung, implementing the LR problem core logic would have been a roadblock.
+ * Amir  Bahmanyari
+ *
+ */
+
 import com.lambdaworks.redis.RedisConnection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -39,7 +50,7 @@ public class BeamAppSupport {
 	 */
 	public static String LRGetOrCreateSeg(Map<String, String> mt, RedisConnection<String, String> connection) {
 		int ltime = Integer.parseInt(mt.get("time"));
-		String segKey = String.format("%s-%s-%s-%s", mt.get("xWay"), mt.get("dir"), mt.get("seg"), (ltime / 180 + 1)); 
+		String segKey = String.format("%s-%s-%s-%s", mt.get("xWay"), mt.get("dir"), mt.get("seg"), (ltime / 180 + 1));
 		// Create a new record for a particular seg+min key for this xway+dir if
 		// it doesn't exist
 		if (((Boolean) (connection.hexists("segSumSpeeds", segKey))).booleanValue() == false
@@ -69,7 +80,7 @@ public class BeamAppSupport {
 			if (null != carLine){
 				String[] tokens = carLine.split(",");
 				//Check if its a re-ent car, if so, reset it
-				if (mt.get("lane").equals("0") && (Integer.parseInt(mt.get("time")) > (Integer.parseInt(tokens[1]) + 180))) { 
+				if (mt.get("lane").equals("0") && (Integer.parseInt(mt.get("time")) > (Integer.parseInt(tokens[1]) + 180))) {
 					carLine = String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s", mt.get("carId"), "-1", "-1", "-1", "-1", "-1",
 							"-1", "-1", "0", "0");
 					//Update current car's info in Redis
@@ -87,7 +98,7 @@ public class BeamAppSupport {
 	 * @return
 	 */
 	public static boolean LRCreateStoppedCar(String stoppedKey, String carId,
-			RedisConnection<String, String> connection) { 
+			RedisConnection<String, String> connection) {
 		String val = null;
 		if (((Boolean) (connection.hexists("stoppedcars", stoppedKey))).booleanValue() == false) {
 			String stoppedLine = String.format("%s,%s", carId, "-1");
@@ -268,16 +279,16 @@ public class BeamAppSupport {
 		}
 		return false;
 	}
-	
-	
+
+
 	/**
 	 * @param prevAccidentKey
 	 * @param mt
 	 * @param connection
 	 * @return
-	 */	
+	 */
 	public static boolean LRClearAccidentIfAny(String prevAccidentKey, Map<String, String> mt, RedisConnection<String, String> connection) {
-        String val = null; 
+        String val = null;
         if (((Boolean)(connection.hexists("accidentcars", prevAccidentKey))).booleanValue() ==  true){
         	val = connection.hget("accidentcars", prevAccidentKey);
             String[] tokens = val.split(",");
