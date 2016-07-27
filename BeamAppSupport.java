@@ -5,7 +5,7 @@ package benchmark.flinkspark.flink;
  	I gratefully acknowledge the support and generosity of my colleague Sung Kim in success of this work.
  	Sung provided me with the previously implemented core Linear Road logic for a different technology.
  	He also provided me every kind of support to identify the core logic for LR computations.
- 	Subsequently, I borrowed most of the upport methods in this file roughly as is.
+ 	Subsequently, I borrowed most of the support methods in this file roughly as is.
  	Without such great help from Sung, implementing the LR problem core logic would have been a roadblock.
  * Amir  Bahmanyari
  *
